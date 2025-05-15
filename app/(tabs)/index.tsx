@@ -1,75 +1,181 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// app/index.tsx
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState } from 'react';
 
-export default function HomeScreen() {
+import { supabase } from '../../lib/supabase.js';
+
+
+
+
+import {
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
+import {
+  Button,
+  Provider as PaperProvider,
+  Snackbar,
+  Text,
+  TextInput,
+  Title,
+} from 'react-native-paper';
+
+const screen = Dimensions.get('window');
+
+export default function AuthScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [message, setMessage] = useState('');
+  const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleAuth = async () => {
+    setLoading(true);
+    const { error } = isLogin
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ email, password });
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setMessage(isLogin ? 'Logged in!' : 'Sign up successful! Check your email.');
+    }
+    setVisible(true);
+    setLoading(false);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <PaperProvider>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <LinearGradient
+          colors={['#667eea', '#764ba2']}
+          style={styles.background}
+        >
+          <View style={styles.cardContainer}>
+            <View style={styles.card}>
+              <Image
+                source={{
+                  uri: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo_TV_2022.svg',
+                }}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+
+              <Title style={styles.title}>
+                {isLogin ? 'Login' : 'Sign Up'}
+              </Title>
+
+              <TextInput
+                label="Email"
+                mode="outlined"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                style={styles.input}
+                outlineColor="#764ba2"
+                activeOutlineColor="#5b2d91"
+              />
+              <TextInput
+                label="Password"
+                mode="outlined"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                style={styles.input}
+                outlineColor="#764ba2"
+                activeOutlineColor="#5b2d91"
+              />
+
+              <Button
+                mode="contained"
+                onPress={handleAuth}
+                loading={loading}
+                style={styles.button}
+                buttonColor="#5b2d91"
+              >
+                {isLogin ? 'Login' : 'Sign Up'}
+              </Button>
+
+              <Text
+                style={styles.toggleText}
+                onPress={() => setIsLogin(!isLogin)}
+              >
+                {isLogin
+                  ? "Don't have an account? Sign Up"
+                  : 'Already have an account? Login'}
+              </Text>
+            </View>
+          </View>
+
+          <Snackbar
+            visible={visible}
+            onDismiss={() => setVisible(false)}
+            duration={3000}
+            style={styles.snackbar}
+          >
+            {message}
+          </Snackbar>
+        </LinearGradient>
+      </KeyboardAvoidingView>
+    </PaperProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  background: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  cardContainer: {
+    width: '100%',
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  card: {
+    backgroundColor: '#ffffffee',
+    borderRadius: 16,
+    padding: 20,
+    width: screen.width * 0.7,
+    elevation: 10,
+    shadowColor: '#000',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  logo: {
+    width: 70,
+    height: 35,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 22,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#5b2d91',
+  },
+  input: {
+    marginBottom: 14,
+  },
+  button: {
+    marginTop: 8,
+    borderRadius: 8,
+    paddingVertical: 6,
+  },
+  toggleText: {
+    marginTop: 14,
+    textAlign: 'center',
+    color: '#5b2d91',
+    fontWeight: '600',
+  },
+  snackbar: {
+    backgroundColor: '#5b2d91',
   },
 });
